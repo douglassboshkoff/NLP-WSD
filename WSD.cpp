@@ -43,7 +43,6 @@ int main(int argc, char** argv) {
 		getline(infile, temp);
 		tolowercase(temp);
 		Sentence s(temp);
-		cout << s.to_string() << endl;
 		sense1list.push_back(s);
 	}
 
@@ -54,9 +53,10 @@ int main(int argc, char** argv) {
 		getline(infile, temp);
 		tolowercase(temp);
 		Sentence s(temp);
-		cout << s.to_string() << endl;
 		sense2list.push_back(s);
 	}
+
+	disambiguate(word, sample_sentence, sense1list, sense2list);
 
 	infile.close();
 	return 0;	
@@ -74,21 +74,27 @@ int disambiguate(string word, Sentence sample, list<Sentence> sense1Sentence,
 	map<string, int> m1;
 	map<string, int> m2;
 
-	for(list<Sentence>::iterator it = sense1Sentence.begin(); it != sense1Sentence.end(); ++it) {
+	for(list<Sentence>::iterator it = sense1Sentence.begin(); it != sense1Sentence.end() - 3; ++it) {
 		Sentence s = *it;
-		for(int i = 0; s.get_size(); i++) {
-			if(m1.count(s.get_word(i)) == 1) {
+		int wordpos;
+		for(int i = 0; i < s.get_size(); i++) {
+			if(s.get_word(i + 3) == word) {
+				wordpos = i + 3;	
+			}
+
+			if(m1.count(s.get_word(i)) > 0) {
 				m1[s.get_word(i)] = m1[s.get_word(i)] + 1;
 			}
 			else {
 				m1[s.get_word(i)] = 1;
 			}
+
 		}
 	}
 
-	for(list<Sentence>::iterator it = sense2Sentence.begin(); it != sense2Sentence.end(); ++it) {
+	for(list<Sentence>::iterator it = sense2Sentence.begin(); it != sense2Sentence.end() - 3; ++it) {
 		Sentence s = *it;
-		for(int i = 0; s.get_size(); i++) {
+		for(int i = 0; i < s.get_size(); i++) {
 			if(m2.count(s.get_word(i)) == 1) {
 				m2[s.get_word(i)] = m2[s.get_word(i)] + 1;
 			}
@@ -98,8 +104,8 @@ int disambiguate(string word, Sentence sample, list<Sentence> sense1Sentence,
 		}
 	}
 
-	int score1 = 0;
-	int score2 = 0;
+	float score1 = 0;
+	float score2 = 0;
 	for(int i = 0; i < sample.get_size(); i++) {
 		string word = sample.get_word(i);
 		tolowercase(word);
@@ -109,9 +115,12 @@ int disambiguate(string word, Sentence sample, list<Sentence> sense1Sentence,
 		}
 		
 		if(m2.count(word) > 0) {
-			score2 += m1[word];
+			score2 += m2[word];
 		}
 	}
+
+	cout << "Score 1: " << score1 << endl;
+	cout << "Score 2: " << score2 << endl;
 
 	return score1 > score1 ? 1 : 2;
 }
